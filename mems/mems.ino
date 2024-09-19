@@ -2,12 +2,12 @@
 // OVERVIEW
 ////////////////////////////////////////////////////////////////////////////////////////
 /*
-DESCRIPTION: I2C protocol demo. Using the Adafruit library. Shows how to access the IC with 
-             a high level API driver, based on Adafruit demo sample.
+DESCRIPTION: I2C protocol demo. Using the Wire.h library only, directly reads from the 
+             MPU-9250 IMU. Shows how to access the IC without a high level API driver.
 
 Data Sheets
-https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf
-https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf
+https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-9250-Datasheet1.pdf
+https://invensense.tdk.com/wp-content/uploads/2015/02/RM-MPU-9250A-00-v1.6.pdf
 
 
 AUTHOR: Eric Brown
@@ -16,7 +16,8 @@ COMMENTS:
 
 HARDWARE SETUP:
 
-Arduinio UNO              MPU-9250 IMU Breakout board
+Arduinio UNO              MPU-9250 IMU Breakout board - Elegoo Most Complete Arduino Uno R3 Kit version
+   
 
 Signal Name     Pin#      Signal Name     Pin #
 ____________________________________________________________
@@ -31,7 +32,7 @@ SDA             D18       SDA             SDA (labeled)
 
 MISC
 
-                          AD0            VCC (address line 0, set to HIGH, so address is 0x69)
+                          AD0             Ground (address line 0)
 
 Note: pullups are on breakout board, so we don't need to add them to breadboard.
 
@@ -49,9 +50,7 @@ HISTORY:
 #include <string.h>
 #include <math.h>
 
-#include <mpu9250.h> // cstddef & cstdint are not compatible with Uno AVR processor
-#include <Wire.h>
-
+#include "Wire.h"  // I2C / 2-wire library
 
 using namespace std;
 
@@ -65,77 +64,114 @@ using namespace std;
 
 // I2C address of the MPU-9250 can be 0x68 or 0x69 depending on external address pin AD0
 // We set AD0 pin HIGH, so the I2C address will be 0x69, else 0x68 which conflicts with another device in demos
-const int MPU9250_I2C_SlaveAddress = 0x69; // temp 68
-
-// printing mode flag, set to 0 for normal human readable, set to 1 for print for plotter via comma seperated list
-#define PRINT_MODE    1
+const int MPU9250_I2C_SlaveAddress = 0x68; 
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 ////////////////////////////////////////////////////////////////////////////////////////
 
-Mpu9250 imu(&Wire, MPU9250_I2C_SlaveAddress);
-
 char gStringBuffer[64]; // used for printing
 
+int16_t accel_x, accel_y, accel_z; // accelerometer raw data (16-bit, 2's complement)
+int16_t gyro_x, gyro_y, gyro_z;    // gyro raw data  (16-bit, 2's complement)
+int16_t temp;                      // temperature sensor data  (16-bit, 2's complement)
+uint8_t device_id;
 ////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////
 
+void setup() 
+{
+// initialize serial port
+Serial.begin(115200);
+Serial.write( "\n\rMPU-9250 IMU Demo.\n\r" );
 
-void setup() {
-  /* Serial to display data */
-  Serial.begin(115200);
-  while(!Serial) {}
-  Serial.write( "\n\rMPU-9250 IMU Demo using mpu9250.h Library.\n\r" );
 
-  /* Start the I2C bus */
-  Wire.begin();
-  Wire.setClock(400000);
+// call the begin method with or without the slave address
+Wire.begin();  // if you want to change something and restart lib, call Wire.end();
 
-  /* Initialize and configure IMU */
-  if (!imu.Begin()) {
-    Serial.println("Error initializing communication with IMU");
-    while(1) {}
-  }
-  /* Set the sample rate divider */
-  if (!imu.ConfigSrd(19)) {
-    Serial.println("Error configured SRD");
-    while(1) {}
-  }
+// set power management and wake up, bare minimum, ignore the countless other settings, we just want to 
+// turn the IC on and get some raw data
+Wire.beginTransmission( MPU9250_I2C_SlaveAddress ); // Begins a transmission to the I2C slave (GY-521 board)
 
-  // give IC a moment before reading...
-  delay(100);
-}
+Wire.write( 0x6B ); // PWR_MGMT_1 register
+Wire.write( 0x00 ); // reset the IC and set registers to defaults 
 
+// end transaction
+Wire.endTransmission(true);
+} // end setup
 
 //////////////////////////////////////////////////////////
 
 void loop() 
 {
+// begin transaction, address the device  
+Wire.beginTransmission( MPU9250_I2C_SlaveAddress );
 
-  if (imu.Read()) {
-    /* Display the data */
-    Serial.print(imu.accel_x_mps2(), 6);
-    Serial.print("\t");
-    Serial.print(imu.accel_y_mps2(), 6);
-    Serial.print("\t");
-    Serial.print(imu.accel_z_mps2(), 6);
-    Serial.print("\t");
-    Serial.print(imu.gyro_x_radps(), 6);
-    Serial.print("\t");
-    Serial.print(imu.gyro_y_radps(), 6);
-    Serial.print("\t");
-    Serial.print(imu.gyro_z_radps(), 6);
-    Serial.print("\t");
-    Serial.print(imu.mag_x_ut(), 6);
-    Serial.print("\t");
-    Serial.print(imu.mag_y_ut(), 6);
-    Serial.print("\t");
-    Serial.print(imu.mag_z_ut(), 6);
-    Serial.print("\t");
-    Serial.println(imu.die_temperature_c(), 6);
-  }
+// we are going read a block of bytes starting at address 0x3B (ACCEL_XOUT_H)
+// which is begins the block containing the accelerometer, gyro, and temp
+// See MPU-6000 and MPU-9250 Register Map and Descriptions p.40
+Wire.write( 0x3B ); 
+
+// end transaction, but the FALSE indicates that a STOP condition is not set, so the bus stays active
+// waiting for a "Repeated Start", which is what we are going to do next, but with a READ operation
+Wire.endTransmission(false); 
+
+// this causes a repeated START condition and allows is to read bytes
+// we need to read 7 registers, each 2 bytes, so 14 bytes
+Wire.requestFrom(MPU9250_I2C_SlaveAddress, 14, true); 
+
+// read the high and low bytes (big endian) for accelerometer
+accel_x = Wire.read()<<8 | Wire.read(); // read registers: 0x3B (ACCEL_XOUT_H) and 0x3C (ACCEL_XOUT_L)
+accel_y = Wire.read()<<8 | Wire.read(); // read registers: 0x3D (ACCEL_YOUT_H) and 0x3E (ACCEL_YOUT_L)
+accel_z = Wire.read()<<8 | Wire.read(); // read registers: 0x3F (ACCEL_ZOUT_H) and 0x40 (ACCEL_ZOUT_L)
+
+// read the high and low bytes (big endian) for temp
+temp = Wire.read()<<8 | Wire.read(); // read registers: 0x41 (TEMP_OUT_H) and 0x42 (TEMP_OUT_L)
+
+// read the high and low bytes (big endian) for gyro
+gyro_x = Wire.read()<<8 | Wire.read(); // read registers: 0x43 (GYRO_XOUT_H) and 0x44 (GYRO_XOUT_L)
+gyro_y = Wire.read()<<8 | Wire.read(); // read registers: 0x45 (GYRO_YOUT_H) and 0x46 (GYRO_YOUT_L)
+gyro_z = Wire.read()<<8 | Wire.read(); // read registers: 0x47 (GYRO_ZOUT_H) and 0x48 (GYRO_ZOUT_L)
+
+// print out accel data
+Serial.print("Accel(");    
+Serial.print( (float)accel_x/16384.0f ); Serial.print(",");    
+Serial.print( (float)accel_y/16384.0f ); Serial.print(",");    
+Serial.print( (float)accel_z/16384.0f ); Serial.print(")");    
+Serial.print(" | ");
+
+// print out gyro data
+Serial.print("Gyro(");    
+Serial.print( (float)gyro_x/16384.0f ); Serial.print(",");    
+Serial.print( (float)gyro_y/16384.0f ); Serial.print(",");    
+Serial.print( (float)gyro_z/16384.0f ); Serial.print(")");    
+Serial.print(" | ");
+
+// temperature equation in C (celcius) was taken from the datasheet (MPU-6000/MPU-9250 Register Map and Description, p.30)
+// then modified to convert to F, i.e. multiply by 1.8 and add 32.0
+Serial.print("temp = "); Serial.print(((float)(temp)/340.00f+36.53f)*1.8f+ 32.0f);
+
+// begin transaction, address the device  
+Wire.beginTransmission( MPU9250_I2C_SlaveAddress );
+
+// we are going read a block of bytes starting at address 0x3B (ACCEL_XOUT_H)
+// which is begins the block containing the accelerometer, gyro, and temp
+// See MPU-6000 and MPU-9250 Register Map and Descriptions p.40
+Wire.write( 0x75 ); 
+
+// end transaction, but the FALSE indicates that a STOP condition is not set, so the bus stays active
+// waiting for a "Repeated Start", which is what we are going to do next, but with a READ operation
+Wire.endTransmission(false); 
+
+// this causes a repeated START condition and allows is to read bytes
+// we need to read 7 registers, each 2 bytes, so 14 bytes
+Wire.requestFrom(MPU9250_I2C_SlaveAddress, 1, true);
+
+device_id = Wire.read();
+Serial.print(" | id = 0x"); Serial.print(device_id, HEX);
+
+Serial.println();
 
 // delay
 delay(100);
