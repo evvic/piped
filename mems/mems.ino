@@ -49,7 +49,7 @@ HISTORY:
 #include <string.h>
 #include <math.h>
 
-#include <mpu9250.h>
+#include <mpu9250.h> // cstddef & cstdint are not compatible with Uno AVR processor
 #include <Wire.h>
 
 
@@ -65,7 +65,7 @@ using namespace std;
 
 // I2C address of the MPU-9250 can be 0x68 or 0x69 depending on external address pin AD0
 // We set AD0 pin HIGH, so the I2C address will be 0x69, else 0x68 which conflicts with another device in demos
-const int MPU9250_I2C_SlaveAddress = 0x68; // temp 68
+const int MPU9250_I2C_SlaveAddress = 0x69; // temp 68
 
 // printing mode flag, set to 0 for normal human readable, set to 1 for print for plotter via comma seperated list
 #define PRINT_MODE    1
@@ -74,7 +74,7 @@ const int MPU9250_I2C_SlaveAddress = 0x68; // temp 68
 // GLOBALS
 ////////////////////////////////////////////////////////////////////////////////////////
 
-MPU9250 imu(Wire, MPU9250_I2C_SlaveAddress);
+Mpu9250 imu(&Wire, MPU9250_I2C_SlaveAddress);
 
 char gStringBuffer[64]; // used for printing
 
@@ -82,36 +82,60 @@ char gStringBuffer[64]; // used for printing
 // FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////
 
-void setup() 
-{
-// initialize serial port
-Serial.begin(115200);
-Serial.write( "\n\rMPU-9250 IMU Demo using mpu9250.h Library.\n\r" );
 
-// slow down I2C clock
-Wire.setClock( 100000 );
+void setup() {
+  /* Serial to display data */
+  Serial.begin(115200);
+  while(!Serial) {}
+  Serial.write( "\n\rMPU-9250 IMU Demo using mpu9250.h Library.\n\r" );
 
-// initialize the MPU if found on bus
-if (!mpu.begin(MPU9250_I2C_SlaveAddress)) 
-  {
-  while (1) 
-    {
-    Serial.println("Failed to find MPU-9250 chip");
-    delay(100);
-    } // end while
-  } // end if
+  /* Start the I2C bus */
+  Wire.begin();
+  Wire.setClock(400000);
 
+  /* Initialize and configure IMU */
+  if (!imu.Begin()) {
+    Serial.println("Error initializing communication with IMU");
+    while(1) {}
+  }
+  /* Set the sample rate divider */
+  if (!imu.ConfigSrd(19)) {
+    Serial.println("Error configured SRD");
+    while(1) {}
+  }
 
+  // give IC a moment before reading...
+  delay(100);
+}
 
-// give IC a moment before reading...
-delay(100);  
-
-} // end setup
 
 //////////////////////////////////////////////////////////
 
 void loop() 
 {
+
+  if (imu.Read()) {
+    /* Display the data */
+    Serial.print(imu.accel_x_mps2(), 6);
+    Serial.print("\t");
+    Serial.print(imu.accel_y_mps2(), 6);
+    Serial.print("\t");
+    Serial.print(imu.accel_z_mps2(), 6);
+    Serial.print("\t");
+    Serial.print(imu.gyro_x_radps(), 6);
+    Serial.print("\t");
+    Serial.print(imu.gyro_y_radps(), 6);
+    Serial.print("\t");
+    Serial.print(imu.gyro_z_radps(), 6);
+    Serial.print("\t");
+    Serial.print(imu.mag_x_ut(), 6);
+    Serial.print("\t");
+    Serial.print(imu.mag_y_ut(), 6);
+    Serial.print("\t");
+    Serial.print(imu.mag_z_ut(), 6);
+    Serial.print("\t");
+    Serial.println(imu.die_temperature_c(), 6);
+  }
 
 // delay
 delay(100);
