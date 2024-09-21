@@ -4,13 +4,13 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
-// #include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 #include <SPI.h>
-
-// void testlines(uint16_t color);
 
 void testdrawtext(Adafruit_ST7735 &tft, char *text, uint16_t color);
 
+#endif
+
+// void testlines(uint16_t color);
 // void testfastlines(uint16_t color1, uint16_t color2);
 
 // void testdrawrects(uint16_t color);
@@ -28,6 +28,3 @@ void testdrawtext(Adafruit_ST7735 &tft, char *text, uint16_t color);
 // void tftPrintTest();
 
 // void mediabuttons();
-
-
-#endif
