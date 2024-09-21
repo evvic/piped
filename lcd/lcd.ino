@@ -1,5 +1,7 @@
 #include <SPI.h>
-#include <TFT.h> 
+#include <TFT.h>
+// #include <Adafruit_GFX.h>    // Core graphics library
+// #include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
 
 // #define PIN_SD_CS 4
 #define PIN_TFT_CS 10
@@ -9,6 +11,7 @@
 #define DELAY_IMAGE_SWAP 60000 // each image is shown for 60 seconds
 
 TFT TFTscreen = TFT(PIN_TFT_CS, PIN_DC, PIN_RST);
+// Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 // Adafruit_ST7735 tft = Adafruit_ST7735(PIN_TFT_CS, PIN_DC, PIN_RST);
 
 int new_color;
@@ -48,6 +51,7 @@ void loop() {
   // set the text color to white
   TFTscreen.stroke(0,0,0);
 
+  TFTscreen.setTextSize(2);
   // write text to the screen in the top left corner
   TFTscreen.text("Testing!", 5, 5);
 
