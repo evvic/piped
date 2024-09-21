@@ -15,7 +15,7 @@ TFT TFTscreen = TFT(PIN_TFT_CS, PIN_DC, PIN_RST);
 // Adafruit_ST7735 tft = Adafruit_ST7735(PIN_TFT_CS, PIN_DC, PIN_RST);
 
 int new_color;
-
+/*
 void setup() {
   // initialize default serial connection to send debug information
   Serial.begin(9600);
@@ -59,3 +59,7 @@ void loop() {
   
   delay(500);
 }
+
+*/
+
+

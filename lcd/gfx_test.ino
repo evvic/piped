@@ -34,7 +34,6 @@
 
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
-#include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 #include <SPI.h>
 
 // These pins will also work for the 1.8" TFT shield.
