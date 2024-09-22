@@ -79,7 +79,7 @@ const int MPU9250_I2C_SlaveAddress = 0x68;
 // GLOBALS
 ////////////////////////////////////////////////////////////////////////////////////////
 
-char gStringBuffer[64]; // used for printing
+char stringBuffer[64]; // used for printing
 
 int16_t accel_x, accel_y, accel_z; // accelerometer raw data (16-bit, 2's complement)
 int16_t gyro_x, gyro_y, gyro_z;    // gyro raw data  (16-bit, 2's complement)
@@ -106,8 +106,38 @@ void testdrawtext(Adafruit_ST7735 &tft, char *text, uint16_t color) {
   tft.print(text);
 }
 
+int accelerateHeight(int height, int frame = 0, int gravity = 9) {
+  return (height + 1 * gravity * frame * frame);
+}
+
+void drawOpeningPipe(int x, int w, int pipe_height = 5) {
+  int PIPE_OPENING_DIFFERENCE_PX = 6;
+  if (x < 0 || x > tft.width()) x = 0;
+
+  int w2 = w + PIPE_OPENING_DIFFERENCE_PX; // w2 SHOULD be larger than w1 (the pipe should have a larger opening part)
+  int offset = (w2/2) - (w/2);
+  tft.fillRect(x + offset, 0, w, pipe_height, ST77XX_GREEN);
+  tft.fillRoundRect(x, pipe_height, w2, pipe_height/2, 2, ST77XX_GREEN);
+}
+
+void drawClosingPipe(int x, int w, int pipe_height = 5) {
+  int PIPE_OPENING_DIFFERENCE_PX = 6;
+  if (x < 0 || x > tft.width()) x = 0;
+
+  int w2 = w + PIPE_OPENING_DIFFERENCE_PX; // w2 SHOULD be larger than w1 (the pipe should have a larger opening part)
+  int offset = (w2/2) - (w/2);
+  tft.fillRect(x + offset, tft.height() - pipe_height, w, pipe_height, ST77XX_GREEN);
+  tft.fillRoundRect(x, tft.height() - pipe_height - (pipe_height/2), w2, pipe_height/2, 2, ST77XX_GREEN);
+}
+
 int gameplayLoop() {
   int player_height = 0;
+  int frame;
+
+  
+
+  drawOpeningPipe(20, RADIUS * 2 + 2);
+  drawClosingPipe(25, RADIUS * 2 + 2);
 
   while (player_height < tft.height()) {
     // begin transaction, address the device  
@@ -119,16 +149,24 @@ int gameplayLoop() {
 
     // tft.fillCircle(player_pos, 15, 10, ST77XX_BLUE);
 
-    player_pos += (int)(accel_y/16384.0f * 10);
+    player_pos += (int)(accel_y/16384.0f * 15);
     if (player_pos > tft.width()) player_pos = tft.width();
     else if (player_pos < 0) player_pos = 0;
 
     // tft.fillScreen(ST77XX_BLUE);
     // tft.drawLine(player_pos, tft.height() - 10, player_pos, tft.height() - 20, ST77XX_YELLOW);
-    tft.fillCircle(player_pos, 15, RADIUS, ST77XX_YELLOW);
+    tft.fillCircle(player_pos, player_height, RADIUS, ST77XX_YELLOW);
+
+    player_height += 5;
+
+    // player_height = accelerateHeight(player_height, frame++);
+    sprintf(stringBuffer, "Height: %d, frame: %d", player_height, frame);
+    Serial.println(stringBuffer);
 
     delay(100);
   }
+
+  return 0;
   
 }
 
@@ -159,6 +197,8 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  tft.fillScreen(ST77XX_BLUE);
   gameplayLoop();
 
 }
