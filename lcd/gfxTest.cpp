@@ -1,7 +1,7 @@
 #include "gfxTest.h"
 
-/*
-void testlines(uint16_t color) {
+
+void testlines(Adafruit_ST7735 &tft, uint16_t color) {
   tft.fillScreen(ST77XX_BLACK);
   for (int16_t x=0; x < tft.width(); x+=6) {
     tft.drawLine(0, 0, x, tft.height()-1, color);
@@ -42,7 +42,7 @@ void testlines(uint16_t color) {
     delay(0);
   }
 }
-*/
+
 
 void testdrawtext(Adafruit_ST7735 &tft, char *text, uint16_t color) {
   tft.setCursor(0, 0);
@@ -50,8 +50,9 @@ void testdrawtext(Adafruit_ST7735 &tft, char *text, uint16_t color) {
   tft.setTextWrap(true);
   tft.print(text);
 }
-/*
-void testfastlines(uint16_t color1, uint16_t color2) {
+
+
+void testfastlines(Adafruit_ST7735 &tft, uint16_t color1, uint16_t color2) {
   tft.fillScreen(ST77XX_BLACK);
   for (int16_t y=0; y < tft.height(); y+=5) {
     tft.drawFastHLine(0, y, tft.width(), color1);
@@ -61,14 +62,16 @@ void testfastlines(uint16_t color1, uint16_t color2) {
   }
 }
 
-void testdrawrects(uint16_t color) {
+
+void testdrawrects(Adafruit_ST7735 &tft, uint16_t color) {
   tft.fillScreen(ST77XX_BLACK);
   for (int16_t x=0; x < tft.width(); x+=6) {
     tft.drawRect(tft.width()/2 -x/2, tft.height()/2 -x/2 , x, x, color);
   }
 }
 
-void testfillrects(uint16_t color1, uint16_t color2) {
+
+void testfillrects(Adafruit_ST7735 &tft, uint16_t color1, uint16_t color2) {
   tft.fillScreen(ST77XX_BLACK);
   for (int16_t x=tft.width()-1; x > 6; x-=6) {
     tft.fillRect(tft.width()/2 -x/2, tft.height()/2 -x/2 , x, x, color1);
@@ -76,7 +79,8 @@ void testfillrects(uint16_t color1, uint16_t color2) {
   }
 }
 
-void testfillcircles(uint8_t radius, uint16_t color) {
+
+void testfillcircles(Adafruit_ST7735 &tft, uint8_t radius, uint16_t color) {
   for (int16_t x=radius; x < tft.width(); x+=radius*2) {
     for (int16_t y=radius; y < tft.height(); y+=radius*2) {
       tft.fillCircle(x, y, radius, color);
@@ -84,7 +88,7 @@ void testfillcircles(uint8_t radius, uint16_t color) {
   }
 }
 
-void testdrawcircles(uint8_t radius, uint16_t color) {
+void testdrawcircles(Adafruit_ST7735 &tft, uint8_t radius, uint16_t color) {
   for (int16_t x=0; x < tft.width()+radius; x+=radius*2) {
     for (int16_t y=0; y < tft.height()+radius; y+=radius*2) {
       tft.drawCircle(x, y, radius, color);
@@ -92,7 +96,7 @@ void testdrawcircles(uint8_t radius, uint16_t color) {
   }
 }
 
-void testtriangles() {
+void testtriangles(Adafruit_ST7735 &tft) {
   tft.fillScreen(ST77XX_BLACK);
   uint16_t color = 0xF800;
   int t;
@@ -109,7 +113,7 @@ void testtriangles() {
   }
 }
 
-void testroundrects() {
+void testroundrects(Adafruit_ST7735 &tft) {
   tft.fillScreen(ST77XX_BLACK);
   uint16_t color = 100;
   int i;
@@ -131,7 +135,7 @@ void testroundrects() {
   }
 }
 
-void tftPrintTest() {
+void tftPrintTest(Adafruit_ST7735 &tft, float p = 3.1415926) {
   tft.setTextWrap(false);
   tft.fillScreen(ST77XX_BLACK);
   tft.setCursor(0, 30);
@@ -170,7 +174,7 @@ void tftPrintTest() {
   tft.print(" seconds.");
 }
 
-void mediabuttons() {
+void mediabuttons(Adafruit_ST7735 &tft) {
   // play
   tft.fillScreen(ST77XX_BLACK);
   tft.fillRoundRect(25, 10, 78, 60, 8, ST77XX_WHITE);
@@ -191,4 +195,4 @@ void mediabuttons() {
   tft.fillTriangle(42, 20, 42, 60, 90, 40, ST77XX_GREEN);
 }
 
-*/
+

@@ -45,7 +45,37 @@ void setup(void) {
   delay(2000);
 
   new_color = 0;
+
+  // line draw test
+  testlines(tft, ST77XX_YELLOW);
+  delay(500);
+
+  // optimized lines
+  testfastlines(tft, ST77XX_RED, ST77XX_BLUE);
+  delay(500);
+
+  testdrawrects(tft, ST77XX_GREEN);
+  delay(500);
+  
+  testfillrects(tft, ST77XX_YELLOW, ST77XX_MAGENTA);
+  delay(500);
+
+  tft.fillScreen(ST77XX_BLACK);
+  testfillcircles(tft, 10, ST77XX_BLUE);
+  testdrawcircles(tft, 10, ST77XX_WHITE);
+  delay(500);
+
+  testtriangles(tft);
+  delay(500);
+
+  testroundrects(tft);
+  delay(500);
+
+  tftPrintTest(tft);
+  delay(8000);
     
+  mediabuttons(tft);
+  delay(500);
 }
 
 
