@@ -15,3 +15,9 @@ Integrating the **MPU-9250** with the **Arduino Uno Rev 3** via the I2C protocol
 ## Circuit Diagram
 
 [share circuit diagram here]
+
+## Picture of wiring
+![Picture of wiring MPU](assets/wiring-photo.png)
+- The `AD0` pin is wired with a resistor to **ground**
+    - Therefore the pin is still set to LOW rather than HIGH
+    - This is not necessary but then pin was originally wired to be HIGH but then moved the resistor to groundbecause the default address is fine
