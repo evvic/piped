@@ -91,6 +91,7 @@ int screen_width = 100;
 char insert_char = 'X';
 int player_pos = 50; // Adjust the index as needed
 char fillChar = ' ';
+int iterations = 0;
 
 // For 1.44" and 1.8" TFT with ST7735:
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
@@ -99,8 +100,9 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 // FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////
 
-void testdrawtext(Adafruit_ST7735 &tft, char *text, uint16_t color) {
-  tft.setCursor(0, 0);
+void drawtext(Adafruit_ST7735 &tft, char *text, uint16_t color, uint8_t size = 1, int x = 0, int y = 0) {
+  tft.setCursor(x, y);
+  tft.setTextSize(size);
   tft.setTextColor(color);
   tft.setTextWrap(true);
   tft.print(text);
@@ -116,8 +118,8 @@ void drawOpeningPipe(int x, int w, int pipe_height = 5) {
 
   int w2 = w + PIPE_OPENING_DIFFERENCE_PX; // w2 SHOULD be larger than w1 (the pipe should have a larger opening part)
   int offset = (w2/2) - (w/2);
-  tft.fillRect(x + offset, 0, w, pipe_height, ST77XX_GREEN);
-  tft.fillRoundRect(x, pipe_height, w2, pipe_height/2, 2, ST77XX_GREEN);
+  tft.fillRect(x, 0, w, pipe_height, ST77XX_GREEN);
+  tft.fillRoundRect(x - offset, pipe_height, w2, pipe_height/2, 2, ST77XX_GREEN);
 }
 
 void drawClosingPipe(int x, int w, int pipe_height = 5) {
@@ -126,20 +128,34 @@ void drawClosingPipe(int x, int w, int pipe_height = 5) {
 
   int w2 = w + PIPE_OPENING_DIFFERENCE_PX; // w2 SHOULD be larger than w1 (the pipe should have a larger opening part)
   int offset = (w2/2) - (w/2);
-  tft.fillRect(x + offset, tft.height() - pipe_height, w, pipe_height, ST77XX_GREEN);
-  tft.fillRoundRect(x, tft.height() - pipe_height - (pipe_height/2), w2, pipe_height/2, 2, ST77XX_GREEN);
+  tft.fillRect(x, tft.height() - pipe_height, w, pipe_height, ST77XX_GREEN);
+  tft.fillRoundRect(x - offset, tft.height() - pipe_height - (pipe_height/2), w2, pipe_height/2, 2, ST77XX_GREEN);
 }
 
-int gameplayLoop() {
+int generateClosingPipeXpos(int screen_width, int pipe_width) {
+  return random(0, screen_width - pipe_width);
+}
+
+void writeScore(int score) {
+  tft.println("Hello World!");
+  tft.setTextColor(ST77XX_BLUE);
+  tft.setTextSize(4);
+}
+
+int gameplayLoop(int pipe_width, int score) {
   int player_height = 0;
   int frame;
 
-  
+  int closing_xpos = generateClosingPipeXpos(tft.width(), pipe_width);
+  int starting_player_xpos = player_pos - (pipe_width/2);
 
-  drawOpeningPipe(20, RADIUS * 2 + 2);
-  drawClosingPipe(25, RADIUS * 2 + 2);
+  // sprintf(stringBuffer, "Score: %d", score); // this is too long
+  sprintf(stringBuffer, "%d", score);
 
-  while (player_height < tft.height()) {
+  drawOpeningPipe(starting_player_xpos, pipe_width);
+  drawClosingPipe(closing_xpos, pipe_width);
+
+  while (player_height < tft.height() - RADIUS) {
     // begin transaction, address the device  
     Wire.beginTransmission( MPU9250_I2C_SlaveAddress );
     Wire.write( 0x3D );
@@ -160,11 +176,23 @@ int gameplayLoop() {
     player_height += 5;
 
     // player_height = accelerateHeight(player_height, frame++);
-    sprintf(stringBuffer, "Height: %d, frame: %d", player_height, frame);
-    Serial.println(stringBuffer);
+    // 
+    // Serial.println(stringBuffer);
+
+    if (player_height < RADIUS*3) {
+      drawOpeningPipe(starting_player_xpos, pipe_width);
+      // write score
+      drawtext(tft, stringBuffer, ST77XX_WHITE, 1);
+    }
+    else if (player_height > tft.height() - RADIUS*3) {
+      drawClosingPipe(closing_xpos, pipe_width);
+    }
 
     delay(100);
   }
+
+  // determine if player won the round
+  if (player_pos - RADIUS < closing_xpos || player_pos + RADIUS > closing_xpos + pipe_width) return 1;
 
   return 0;
   
@@ -190,16 +218,34 @@ void setup() {
 
   // large block of text
   tft.fillScreen(ST77XX_BLACK);
-  testdrawtext(tft, "Hello World", ST77XX_WHITE);
-  tft.fillScreen(ST77XX_BLUE);
+  drawtext(tft, "Warming up...", ST77XX_WHITE);
+  delay(1000);
 
+  tft.fillScreen(ST77XX_BLUE);
+  iterations = 0;
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
+  // DO NOT LET pipe_width GET SMALLER THAN RADIUS*2
+  int pipe_width = RADIUS * 5 - (int)sqrt(iterations*20.0);
+  if (pipe_width <= RADIUS*2) pipe_width = RADIUS*2;
+
   tft.fillScreen(ST77XX_BLUE);
-  gameplayLoop();
+  int result = gameplayLoop(pipe_width, iterations);
+  
+  // Game Over screen
+  if (result != 0) {
+    tft.fillScreen(ST77XX_RED);
+    drawtext(tft, "GAME OVER", ST77XX_WHITE, 4, 10, 5);
+    sprintf(stringBuffer, "Score: %d", iterations);
+    drawtext(tft, stringBuffer, ST77XX_WHITE, 2, 10, 70);
+    iterations = 0;
+    
+    delay(10000);
+  }
+  else iterations++;
 
 }
 
