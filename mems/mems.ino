@@ -76,9 +76,34 @@ int16_t accel_x, accel_y, accel_z; // accelerometer raw data (16-bit, 2's comple
 int16_t gyro_x, gyro_y, gyro_z;    // gyro raw data  (16-bit, 2's complement)
 int16_t temp;                      // temperature sensor data  (16-bit, 2's complement)
 uint8_t device_id;
+
+int screen_width = 100;
+char insert_char = 'X';
+int insert_index = 50; // Adjust the index as needed
+char fillChar = ' ';
 ////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////
+
+void printPosition(int insert_index, int screen_width = 100, char insert_char = 'X') {
+  if (insert_index > screen_width) insert_index = screen_width;
+  else if (insert_index < 0) insert_index = 0;
+
+  for (int i = 0; i < insert_index; i++) Serial.print(" ");
+
+  Serial.print(insert_char);
+
+  Serial.println(insert_index);
+
+// TEMP serial
+// Create a String of spaces
+// String output(screen_width, fillChar);
+// String firstPart = output.substring(0, insert_index);
+// String secondPart = output.substring(insert_index + 1);
+// output = firstPart + insertChar + secondPart;
+// Serial.println(output);
+
+}
 
 void setup() 
 {
@@ -135,22 +160,29 @@ gyro_y = Wire.read()<<8 | Wire.read(); // read registers: 0x45 (GYRO_YOUT_H) and
 gyro_z = Wire.read()<<8 | Wire.read(); // read registers: 0x47 (GYRO_ZOUT_H) and 0x48 (GYRO_ZOUT_L)
 
 // print out accel data
-Serial.print("Accel(");    
-Serial.print( (float)accel_x/16384.0f ); Serial.print(",");    
-Serial.print( (float)accel_y/16384.0f ); Serial.print(",");    
-Serial.print( (float)accel_z/16384.0f ); Serial.print(")");    
-Serial.print(" | ");
+// Serial.print("Accel(");    
+// Serial.print( (float)accel_x/16384.0f ); Serial.print(",");    
+// Serial.print( (float)accel_y/16384.0f ); Serial.print(",");    
+// Serial.print( (float)accel_z/16384.0f ); Serial.print(")");    
+// Serial.print(" | ");
 
 // print out gyro data
-Serial.print("Gyro(");    
-Serial.print( (float)gyro_x/16384.0f ); Serial.print(",");    
-Serial.print( (float)gyro_y/16384.0f ); Serial.print(",");    
-Serial.print( (float)gyro_z/16384.0f ); Serial.print(")");    
-Serial.print(" | ");
+// Serial.print("Gyro(");    
+// Serial.print( (float)gyro_x/16384.0f ); Serial.print(",");    
+// Serial.print( (float)gyro_y/16384.0f ); Serial.print(",");    
+// Serial.print( (float)gyro_z/16384.0f ); Serial.print(")");    
+// Serial.print(" | ");
+
+insert_index += (int)(accel_y/16384.0f * 10);
+if (insert_index > screen_width) insert_index = screen_width;
+else if (insert_index < 0) insert_index = 0;
+
+printPosition(insert_index);
+
 
 // temperature equation in C (celcius) was taken from the datasheet (MPU-6000/MPU-9250 Register Map and Description, p.30)
 // then modified to convert to F, i.e. multiply by 1.8 and add 32.0
-Serial.print("temp = "); Serial.print(((float)(temp)/340.00f+36.53f)*1.8f+ 32.0f);
+// Serial.print("temp = "); Serial.print(((float)(temp)/340.00f+36.53f)*1.8f+ 32.0f);
 
 // begin transaction, address the device  
 Wire.beginTransmission( MPU9250_I2C_SlaveAddress );
@@ -165,14 +197,16 @@ Wire.write( 0x75 );
 Wire.endTransmission(false); 
 
 // this causes a repeated START condition and allows is to read bytes
-// we need to read 7 registers, each 2 bytes, so 14 bytes
+// we need to read 1 register, of 1 byte, so 1 byte
 Wire.requestFrom(MPU9250_I2C_SlaveAddress, 1, true);
 
 device_id = Wire.read();
-Serial.print(" | id = 0x"); Serial.print(device_id, HEX);
+// Serial.print(" | id = 0x"); Serial.print(device_id, HEX);
 
-Serial.println();
+// Serial.println();
 
 // delay
 delay(100);
 } // end loop
+
+

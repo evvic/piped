@@ -14,7 +14,20 @@ Integrating the **MPU-9250** with the **Arduino Uno Rev 3** via the I2C protocol
 
 ## Circuit Diagram
 
-[share circuit diagram here]
+
+```
+      10 uF Capacitor
+┌───────────┬───────┐
+│┌──────────┴──────┐│
+││ ╔══════════╗    ││ ╔═════════╗
+││ ║ Arduino  ║    ││ ║ MPU9250 ║
+││ ║ Uno  SCL >──┐ │└─< VCC     ║
+││ ║      SDA >─┐│ └──< GND     ║
+││ ║          ║ │└────< SCL     ║
+│└─< GND      ║ └─────< SDA     ║
+└──< 3.3V     ║       ║         ║
+   ╚══════════╝       ╚═════════╝
+```
 
 ## Picture of wiring
 ![Picture of wiring MPU](assets/wiring-photo.png)
