@@ -160,24 +160,24 @@ gyro_y = Wire.read()<<8 | Wire.read(); // read registers: 0x45 (GYRO_YOUT_H) and
 gyro_z = Wire.read()<<8 | Wire.read(); // read registers: 0x47 (GYRO_ZOUT_H) and 0x48 (GYRO_ZOUT_L)
 
 // print out accel data
-// Serial.print("Accel(");    
-// Serial.print( (float)accel_x/16384.0f ); Serial.print(",");    
-// Serial.print( (float)accel_y/16384.0f ); Serial.print(",");    
-// Serial.print( (float)accel_z/16384.0f ); Serial.print(")");    
-// Serial.print(" | ");
+Serial.print("Accel(");    
+Serial.print( (float)accel_x/16384.0f ); Serial.print(",");    
+Serial.print( (float)accel_y/16384.0f ); Serial.print(",");    
+Serial.print( (float)accel_z/16384.0f ); Serial.print(")");    
+Serial.print(" | ");
 
 // print out gyro data
-// Serial.print("Gyro(");    
-// Serial.print( (float)gyro_x/16384.0f ); Serial.print(",");    
-// Serial.print( (float)gyro_y/16384.0f ); Serial.print(",");    
-// Serial.print( (float)gyro_z/16384.0f ); Serial.print(")");    
-// Serial.print(" | ");
+Serial.print("Gyro(");    
+Serial.print( (float)gyro_x/16384.0f ); Serial.print(",");    
+Serial.print( (float)gyro_y/16384.0f ); Serial.print(",");    
+Serial.print( (float)gyro_z/16384.0f ); Serial.print(")");    
+Serial.print(" | ");
 
 insert_index += (int)(accel_y/16384.0f * 10);
 if (insert_index > screen_width) insert_index = screen_width;
 else if (insert_index < 0) insert_index = 0;
 
-printPosition(insert_index);
+// printPosition(insert_index);
 
 
 // temperature equation in C (celcius) was taken from the datasheet (MPU-6000/MPU-9250 Register Map and Description, p.30)
@@ -201,9 +201,9 @@ Wire.endTransmission(false);
 Wire.requestFrom(MPU9250_I2C_SlaveAddress, 1, true);
 
 device_id = Wire.read();
-// Serial.print(" | id = 0x"); Serial.print(device_id, HEX);
+Serial.print(" | id = 0x"); Serial.print(device_id, HEX);
 
-// Serial.println();
+Serial.println();
 
 // delay
 delay(100);
