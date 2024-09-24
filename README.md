@@ -2,6 +2,8 @@
 
 A simple game using the gyroscope and an LCD to fall into the opening pipe!
 
+_The pipes continue to get smaller upon every sequential connection!_
+
 | Screencast | Description |
 | ---------- | ----------- |
 | [YouTube](https://youtube.com/shorts/RmU1C4MuSO8?si=YyTCMUJMZ2fiyuRG) | Live demo of game working with commentary |
