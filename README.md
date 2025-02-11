@@ -1,4 +1,4 @@
-## Pipes Game
+## Piped Game
 
 Drop from one pipe and rotate the "controller" to fall into the next pipe! The MEMS data from the MPU gyroscope controlls the movement!
 
