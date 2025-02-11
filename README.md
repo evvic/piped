@@ -1,6 +1,6 @@
 ## Pipes Game
 
-A simple game using the gyroscope and an LCD to fall into the opening pipe!
+Drop from one pipe and rotate the "controller" to fall into the next pipe! The MEMS data from the MPU gyroscope controlls the movement!
 
 _The pipes continue to get smaller upon every sequential connection!_
 
